@@ -22,3 +22,10 @@ coder
 The `coder` executable conflicts with the unrelated
 [`coder`](https://formulae.brew.sh/formula/coder) formula. Uninstall or unlink
 that formula before installing `just-every-code`.
+
+## Automatic updates
+
+The `just-every-code` formula is checked against the latest upstream release
+every day at 05:17 UTC. When a new version is available, the workflow verifies
+all four release assets, updates their SHA-256 checksums, validates the formula,
+and opens a pull request. It does not approve or merge the pull request.
