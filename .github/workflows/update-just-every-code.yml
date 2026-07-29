@@ -1,0 +1,70 @@
+name: Update just-every-code
+
+on:
+  schedule:
+    - cron: "17 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: update-just-every-code
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Homebrew
+        uses: Homebrew/actions/setup-homebrew@9af03b7ae3f9e2ae5c174f659d5c3909f7e7dbac # 2026.07.29.1
+
+      - name: Test updater
+        run: ruby test/update_just_every_code_test.rb
+
+      - name: Update formula
+        id: update
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ruby scripts/update_just_every_code.rb | tee -a "$GITHUB_OUTPUT"
+
+      - name: Validate formula
+        if: steps.update.outputs.changed == 'true'
+        run: |
+          brew style justusschock/tap/just-every-code
+          brew audit --strict --formula justusschock/tap/just-every-code
+          brew install justusschock/tap/just-every-code
+          brew test justusschock/tap/just-every-code
+
+      - name: Open update pull request
+        if: steps.update.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.update.outputs.version }}
+          PR_BODY: |
+            Updates `just-every-code` to the latest upstream release.
+
+            The workflow verified all four release assets, refreshed their
+            SHA-256 checksums, audited the formula, installed it on Linux, and
+            ran the formula test.
+        run: |
+          branch="automation/just-every-code-v${VERSION}"
+          gh auth setup-git
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -C "$branch"
+          git add Formula/just-every-code.rb
+          git commit -m "Update just-every-code to ${VERSION}"
+          git push --force-with-lease origin "$branch"
+
+          existing_pr="$(gh pr list --head "$branch" --state open --json url --jq '.[0].url')"
+          if [[ -n "$existing_pr" ]]; then
+            echo "$existing_pr"
+          else
+            gh pr create \
+              --base main \
+              --head "$branch" \
+              --title "Update just-every-code to ${VERSION}" \
+              --body "$PR_BODY"
+          fi
