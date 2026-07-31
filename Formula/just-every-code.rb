@@ -5,21 +5,21 @@ class JustEveryCode < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/just-every/code/releases/download/v0.6.156/code-aarch64-apple-darwin.tar.gz"
-      sha256 "1f440d0fc7a047f6486cc6d529879b8176832c8b4eacb34ca65c0622aafeb4d8"
+      url "https://github.com/just-every/code/releases/download/v0.6.160/code-aarch64-apple-darwin.tar.gz"
+      sha256 "2b40eb94fae8a51c44fd0e2866309d2cdaef9c298b08e8418adb469382dbd653"
     else
-      url "https://github.com/just-every/code/releases/download/v0.6.156/code-x86_64-apple-darwin.tar.gz"
-      sha256 "af7b1e7aa5dc4713964601a436296678472289148cafa56bb7dbf9c76c2c20aa"
+      url "https://github.com/just-every/code/releases/download/v0.6.160/code-x86_64-apple-darwin.tar.gz"
+      sha256 "e2537fc4cd5a7cc4686dc27f405270f2116027de9076b6a2bfb12bb52de5a394"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm?
-      url "https://github.com/just-every/code/releases/download/v0.6.156/code-aarch64-unknown-linux-musl.tar.gz"
-      sha256 "e20efb7acea4636f915d1bfc1723774ba9a6b7bc5469e53bf62cf4e70d53d5f2"
+      url "https://github.com/just-every/code/releases/download/v0.6.160/code-aarch64-unknown-linux-musl.tar.gz"
+      sha256 "812f2a35a8d7dd3cc31349567f737f6dea599331937e665580ea07d42a1b492e"
     else
-      url "https://github.com/just-every/code/releases/download/v0.6.156/code-x86_64-unknown-linux-musl.tar.gz"
-      sha256 "d00151979c22ae2442618fac535b9a485f4bd7a18b21441daa0f0bc4353e7ac8"
+      url "https://github.com/just-every/code/releases/download/v0.6.160/code-x86_64-unknown-linux-musl.tar.gz"
+      sha256 "29b0ff476de0839961ba4af69119a8ff0a8de3276f9e7f1b1bcdfb53c12bfbaa"
     end
   end
 
