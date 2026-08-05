@@ -28,4 +28,7 @@ that formula before installing `just-every-code`.
 The `just-every-code` formula is checked against the latest upstream release
 every day at 05:17 UTC. When a new version is available, the workflow verifies
 all four release assets, updates their SHA-256 checksums, validates the formula,
-and opens a pull request. It does not approve or merge the pull request.
+and opens a pull request. It squash-merges the pull request only when GitHub
+Actions created it in this repository, its branch matches the updater naming
+convention, and it changes only `Formula/just-every-code.rb`. External and
+manually created pull requests are never merged by this workflow.
