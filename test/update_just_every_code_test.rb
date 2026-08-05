@@ -62,14 +62,15 @@ class UpdateJustEveryCodeTest < Minitest::Test
       release_path = File.join(dir, "release.json")
       FileUtils.cp(FORMULA_PATH, formula_path)
       original_formula = File.read(formula_path)
-      File.write(release_path, JSON.generate("tag_name" => "v0.6.156", "assets" => []))
+      current_version = original_formula[%r{/download/v(\d+\.\d+\.\d+)/}, 1]
+      File.write(release_path, JSON.generate("tag_name" => "v#{current_version}", "assets" => []))
 
       result = updater.update(
         formula_path: formula_path,
         release_json_path: release_path,
       )
 
-      assert_equal({ version: "0.6.156", changed: false }, result)
+      assert_equal({ version: current_version, changed: false }, result)
       assert_equal original_formula, File.read(formula_path)
     end
   end
@@ -105,7 +106,7 @@ class UpdateJustEveryCodeTest < Minitest::Test
     end
   end
 
-  def test_workflow_is_scheduled_manual_pinned_and_never_auto_merges
+  def test_workflow_only_squash_merges_internal_bot_formula_updates
     assert File.exist?(WORKFLOW_PATH), "expected the automatic update workflow to exist"
 
     workflow = File.read(WORKFLOW_PATH)
@@ -119,7 +120,13 @@ class UpdateJustEveryCodeTest < Minitest::Test
     assert_includes workflow, "gh auth setup-git"
     assert_includes workflow, "gh pr create"
     assert_match(/if: steps\.update\.outputs\.changed == 'true'/, workflow)
-    refute_match(/gh pr merge|auto-merge/i, workflow)
+    assert_includes workflow, '.author.login == "app/github-actions"'
+    assert_includes workflow, ".isCrossRepository == false"
+    assert_includes workflow, '.headRepositoryOwner.login == "justusschock"'
+    assert_includes workflow, '^automation/just-every-code-v[0-9]+[.][0-9]+[.][0-9]+$'
+    assert_includes workflow, '[.files[].path] == ["Formula/just-every-code.rb"]'
+    assert_includes workflow, 'gh pr merge "$pr_url" --squash'
+    refute_match(/^\s*pull_request:/, workflow)
   end
 
   private

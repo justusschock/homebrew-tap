@@ -37,7 +37,7 @@ jobs:
           brew install justusschock/tap/just-every-code
           brew test justusschock/tap/just-every-code
 
-      - name: Open update pull request
+      - name: Open and merge update pull request
         if: steps.update.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -60,11 +60,27 @@ jobs:
 
           existing_pr="$(gh pr list --head "$branch" --state open --json url --jq '.[0].url')"
           if [[ -n "$existing_pr" ]]; then
-            echo "$existing_pr"
+            pr_url="$existing_pr"
           else
-            gh pr create \
+            pr_url="$(gh pr create \
               --base main \
               --head "$branch" \
               --title "Update just-every-code to ${VERSION}" \
-              --body "$PR_BODY"
+              --body "$PR_BODY")"
           fi
+
+          safe_to_merge="$(gh pr view "$pr_url" \
+            --json author,files,headRefName,headRepositoryOwner,isCrossRepository \
+            --jq '
+              .author.login == "app/github-actions" and
+              .isCrossRepository == false and
+              .headRepositoryOwner.login == "justusschock" and
+              (.headRefName | test("^automation/just-every-code-v[0-9]+[.][0-9]+[.][0-9]+$")) and
+              ([.files[].path] == ["Formula/just-every-code.rb"])
+            ')"
+          if [[ "$safe_to_merge" != "true" ]]; then
+            echo "::error::Refusing to merge PR that does not match the internal updater policy: $pr_url"
+            exit 1
+          fi
+
+          gh pr merge "$pr_url" --squash
